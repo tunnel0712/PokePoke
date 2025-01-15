@@ -157,11 +157,36 @@
             public CheckPoint(int count) { this.Count = count; }
             public int Count { get; set; }
             public double Fullfill = 0;
+            public bool IsFullFilled = false;
             public virtual bool IsFullfill() { throw new NotImplementedException(); }
-            public void Update() { if (this.IsFullfill()) { this.Fullfill++; } }
+            public void Update() 
+            {
+                this.IsFullFilled = this.IsFullfill();
+                if (this.IsFullFilled) 
+                { 
+                    this.Fullfill++; 
+                } 
+            }
+            public void Update(bool fullfill) 
+            {
+                this.IsFullFilled = fullfill;
+                if (this.IsFullFilled) 
+                { 
+                    this.Fullfill++; 
+                } 
+            }
             public virtual void Reset() { throw new NotImplementedException(); }
-            public double GetResult() { return this.Fullfill / this.Count * 100; } 
+            public double GetResult() { return Math.Round((this.Fullfill / this.Count) * 100, 2); } 
             public virtual string ToName() { throw new NotImplementedException(); }
+        }
+
+        public static bool HaveOne(this List<Card> hands, CardType type)
+        {
+            return hands.Any(h => h.Type == type);
+        }
+        public static bool HaveTwo(this List<Card> hands, CardType type)
+        {
+            return hands.Count(h => h.Type == type) == 2;
         }
         #endregion
 
@@ -171,12 +196,14 @@
         /// </summary>
         public enum CardType
         {
-            Fire,
-            Hitokage,
-            Rizard,
-            Rizardon,
-            Gardy,
-            Windy,
+            Rocon, 
+            Kyukon,
+            //
+            Ponita,
+            Gyarop,
+            //
+            Katsura,
+            //
             Okido,
             PokeBall,
             Other,
@@ -189,21 +216,19 @@
         {
             List<Card> Deck = new List<Card>
             {
-                new Card { Type = CardType.Fire, IsTane = true  },
-                new Card { Type = CardType.Fire, IsTane = true },
-                //
-                new Card { Type = CardType.Hitokage, IsTane = true },
-                new Card { Type = CardType.Hitokage, IsTane = true },
-                new Card { Type = CardType.Rizard },
-                new Card { Type = CardType.Rizard },
-                new Card { Type = CardType.Rizardon },
-                new Card { Type = CardType.Rizardon },
-                ////
-                new Card { Type = CardType.Gardy, IsTane = true },
-                new Card { Type = CardType.Gardy, IsTane = true },
-                new Card { Type = CardType.Windy },
-                new Card { Type = CardType.Windy },
-
+                //キュウコン
+                new Card { Type = CardType.Rocon, IsTane = true },
+                new Card { Type = CardType.Rocon, IsTane = true },
+                new Card { Type = CardType.Kyukon },
+                new Card { Type = CardType.Kyukon },
+                //ギャロップ
+                new Card { Type = CardType.Ponita, IsTane = true },
+                new Card { Type = CardType.Ponita, IsTane = true },
+                new Card { Type = CardType.Gyarop },
+                new Card { Type = CardType.Gyarop },
+                //カツラ
+                new Card { Type = CardType.Katsura },
+                new Card { Type = CardType.Katsura },
                 //
                 new Card { Type = CardType.Okido },
                 new Card { Type = CardType.Okido },
@@ -220,23 +245,99 @@
         #endregion
 
         #region <条件ごとに変える>
-        public class FastestRezardon : CheckPoint
+        public class FastestKyucon : CheckPoint
         {
-            public FastestRezardon(int count) : base(count) { }
-            public bool FirstTimeHitokage { get; set; }
-            public bool SecondTimeRizard { get; set; }
-            public bool ThirdTimeRizardon { get; set; }
+            public FastestKyucon(int count) : base(count) { }
+            public bool FirstTimeRocon { get; set; }
+            public bool SecondTimeKyucon { get; set; }
             public override bool IsFullfill()
             {
-                return this.FirstTimeHitokage && this.SecondTimeRizard && this.ThirdTimeRizardon;
+                return this.FirstTimeRocon && this.SecondTimeKyucon;
             }
             public override void Reset()
             {
-                this.FirstTimeHitokage = this.SecondTimeRizard = this.ThirdTimeRizardon = false;
+                this.FirstTimeRocon = this.SecondTimeKyucon = false;
             }
             public override string ToName()
             {
-                return "リザードンが最速で完成する確率";
+                return "キュウコンが最速で完成する";
+            }
+        }
+        public class FastestGyarop : CheckPoint
+        {
+            public FastestGyarop(int count) : base(count) { }
+            public bool FirstTimePonita { get; set; }
+            public bool SecondTimeGyarop { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.FirstTimePonita && this.SecondTimeGyarop;
+            }
+            public override void Reset()
+            {
+                this.FirstTimePonita = this.SecondTimeGyarop = false;
+            }
+            public override string ToName()
+            {
+                return "ギャロップが最速で完成する";
+            }
+        }
+        public class FastestKatsura : CheckPoint
+        {
+            public FastestKatsura(int count) : base(count) { }
+            public bool SecondTimeKatsura { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.SecondTimeKatsura;
+            }
+            public override void Reset()
+            {
+                this.SecondTimeKatsura = false;
+            }
+            public override string ToName()
+            {
+                return "カツラが最速で使える";
+            }
+        }
+        public class FullKatsura : CheckPoint
+        {
+            public FullKatsura(int count) : base(count) { }
+            public bool SecondTimeKatsura { get; set; }
+            public bool ThirdTimeTwoKatsura { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.SecondTimeKatsura && this.ThirdTimeTwoKatsura;
+            }
+            public override void Reset()
+            {
+                this.SecondTimeKatsura = this.ThirdTimeTwoKatsura = false;
+            }
+            public override string ToName()
+            {
+                return "カツラが二枚連続で使える確率";
+            }
+        }
+        public class GyaropOrKyucon : CheckPoint
+        {
+            public GyaropOrKyucon(int count) : base(count) { }
+            public override string ToName()
+            {
+                return "ギャロップかキュウコンが最速で完成する";
+            }
+        }
+        public class KatsuraAndGyaropOrKyucon : CheckPoint
+        {
+            public KatsuraAndGyaropOrKyucon(int count) : base(count) { }
+            public override string ToName()
+            {
+                return "ギャロップかキュウコンが完成してカツラも手札にある";
+            }
+        }
+        public class FullKatsuraAndGyaropOrKyucon : CheckPoint
+        {
+            public FullKatsuraAndGyaropOrKyucon(int count) : base(count) { }
+            public override string ToName()
+            {
+                return "ギャロップかキュウコンが完成してカツラが二枚連続で使える";
             }
         }
         #endregion
@@ -247,7 +348,13 @@
             int count = 100000;
 
             #region <チェック項目のリスト>
-            FastestRezardon fastestRezardon = new FastestRezardon(count);
+            FastestGyarop fastestGyarop = new FastestGyarop(count);
+            FastestKyucon fastestKyucon = new FastestKyucon(count);
+            FastestKatsura fastestKatsura = new FastestKatsura(count);
+            FullKatsura fullKatsura = new FullKatsura(count);
+            GyaropOrKyucon gyaropOrKyucon = new GyaropOrKyucon(count);
+            KatsuraAndGyaropOrKyucon katsuraAndGyaropOrKyucon = new KatsuraAndGyaropOrKyucon(count);
+            FullKatsuraAndGyaropOrKyucon fullKatsuraAndGyaropOrKyucon = new FullKatsuraAndGyaropOrKyucon(count);
             #endregion
 
             for (int i = 0; i < count; i++)
@@ -258,38 +365,64 @@
                 #endregion
 
                 #region <チェック項目のリセット>
-                fastestRezardon.Reset();
+                fastestGyarop.Reset();
+                fastestKyucon.Reset();
+                fastestKatsura.Reset();
+                fullKatsura.Reset();
                 #endregion
 
                 // 1ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestRezardon.FirstTimeHitokage = hands.Any(h => h.Type == CardType.Hitokage);
+                fastestKyucon.FirstTimeRocon = hands.HaveOne(CardType.Rocon);
+                fastestGyarop.FirstTimePonita = hands.HaveOne(CardType.Ponita);
                 #endregion
 
                 // 2ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestRezardon.SecondTimeRizard = hands.Any(h => h.Type == CardType.Rizard);
+                fastestKyucon.SecondTimeKyucon = hands.HaveOne(CardType.Kyukon);
+                fastestGyarop.SecondTimeGyarop = hands.HaveOne(CardType.Gyarop);
+                fastestKatsura.SecondTimeKatsura = hands.HaveOne(CardType.Katsura);
+                fullKatsura.SecondTimeKatsura = hands.HaveOne(CardType.Katsura);
                 #endregion
 
                 // 3ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestRezardon.ThirdTimeRizardon = hands.Any(h => h.Type == CardType.Rizardon);
+                fullKatsura.ThirdTimeTwoKatsura = hands.HaveTwo(CardType.Katsura);
                 #endregion
 
                 // 4ターン目
                 hands = DrawOne(hands);
 
                 #region <チェック項目の更新>
-                fastestRezardon.Update();
+                fastestGyarop.Update();
+                fastestKyucon.Update();
+                fastestKatsura.Update();
+                fullKatsura.Update();
+                gyaropOrKyucon.Update(fastestGyarop.IsFullfill() || fastestKyucon.IsFullfill());
+                katsuraAndGyaropOrKyucon.Update(fastestKatsura.IsFullFilled && gyaropOrKyucon.IsFullFilled);
+                fullKatsuraAndGyaropOrKyucon.Update(fullKatsura.IsFullFilled && gyaropOrKyucon.IsFullFilled);
                 #endregion
             }
 
             #region <結果の出力>
-            Console.WriteLine(fastestRezardon.ToName());
-            Console.WriteLine(fastestRezardon.GetResult());
+            //
+            Console.WriteLine(fastestKyucon.ToName());
+            Console.WriteLine(fastestKyucon.GetResult());
+            //
+            Console.WriteLine(fastestGyarop.ToName());
+            Console.WriteLine(fastestGyarop.GetResult());
+            //
+            Console.WriteLine(gyaropOrKyucon.ToName());
+            Console.WriteLine(gyaropOrKyucon.GetResult());
+            //
+            Console.WriteLine(katsuraAndGyaropOrKyucon.ToName());
+            Console.WriteLine(katsuraAndGyaropOrKyucon.GetResult());
+            //
+            Console.WriteLine(fullKatsuraAndGyaropOrKyucon.ToName());
+            Console.WriteLine(fullKatsuraAndGyaropOrKyucon.GetResult());
             #endregion
 
             Console.ReadKey();
