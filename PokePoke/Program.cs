@@ -196,13 +196,14 @@
         /// </summary>
         public enum CardType
         {
-            Rocon, 
-            Kyukon,
+            Celebi,
             //
-            Ponita,
-            Gyarop,
+            Tsutaja,
+            Jaropi,
+            Jaroda,
             //
-            Katsura,
+            Tamatama,
+            Nassy,
             //
             Okido,
             PokeBall,
@@ -216,19 +217,21 @@
         {
             List<Card> Deck = new List<Card>
             {
-                //キュウコン
-                new Card { Type = CardType.Rocon, IsTane = true },
-                new Card { Type = CardType.Rocon, IsTane = true },
-                new Card { Type = CardType.Kyukon },
-                new Card { Type = CardType.Kyukon },
-                //ギャロップ
-                new Card { Type = CardType.Ponita, IsTane = true },
-                new Card { Type = CardType.Ponita, IsTane = true },
-                new Card { Type = CardType.Gyarop },
-                new Card { Type = CardType.Gyarop },
-                //カツラ
-                new Card { Type = CardType.Katsura },
-                new Card { Type = CardType.Katsura },
+                // セレビィ
+                new Card { Type = CardType.Celebi, IsTane = true },
+                new Card { Type = CardType.Celebi, IsTane = true },
+                // ナッシー
+                new Card { Type = CardType.Tamatama, IsTane = true },
+                new Card { Type = CardType.Tamatama, IsTane = true },
+                new Card { Type = CardType.Nassy },
+                new Card { Type = CardType.Nassy },
+                // ジャローダ
+                // new Card { Type = CardType.Tsutaja, IsTane = true },
+                new Card { Type = CardType.Tsutaja, IsTane = true },
+                new Card { Type = CardType.Jaropi, },
+                new Card { Type = CardType.Jaropi, },
+                new Card { Type = CardType.Jaroda, },
+                new Card { Type = CardType.Jaroda, },
                 //
                 new Card { Type = CardType.Okido },
                 new Card { Type = CardType.Okido },
@@ -245,99 +248,23 @@
         #endregion
 
         #region <条件ごとに変える>
-        public class FastestKyucon : CheckPoint
+        public class FastestJaroda : CheckPoint
         {
-            public FastestKyucon(int count) : base(count) { }
-            public bool FirstTimeRocon { get; set; }
-            public bool SecondTimeKyucon { get; set; }
+            public FastestJaroda(int count) : base(count) { }
+            public bool FirstTimeTsutaja { get; set; }
+            public bool SecondTimeJaropi { get; set; }
+            public bool ThirdTimeJaroda { get; set; }
             public override bool IsFullfill()
             {
-                return this.FirstTimeRocon && this.SecondTimeKyucon;
+                return this.FirstTimeTsutaja && this.SecondTimeJaropi && this.ThirdTimeJaroda;
             }
             public override void Reset()
             {
-                this.FirstTimeRocon = this.SecondTimeKyucon = false;
+                this.FirstTimeTsutaja = this.SecondTimeJaropi = this.ThirdTimeJaroda = false;
             }
             public override string ToName()
             {
-                return "キュウコンが最速で完成する";
-            }
-        }
-        public class FastestGyarop : CheckPoint
-        {
-            public FastestGyarop(int count) : base(count) { }
-            public bool FirstTimePonita { get; set; }
-            public bool SecondTimeGyarop { get; set; }
-            public override bool IsFullfill()
-            {
-                return this.FirstTimePonita && this.SecondTimeGyarop;
-            }
-            public override void Reset()
-            {
-                this.FirstTimePonita = this.SecondTimeGyarop = false;
-            }
-            public override string ToName()
-            {
-                return "ギャロップが最速で完成する";
-            }
-        }
-        public class FastestKatsura : CheckPoint
-        {
-            public FastestKatsura(int count) : base(count) { }
-            public bool SecondTimeKatsura { get; set; }
-            public override bool IsFullfill()
-            {
-                return this.SecondTimeKatsura;
-            }
-            public override void Reset()
-            {
-                this.SecondTimeKatsura = false;
-            }
-            public override string ToName()
-            {
-                return "カツラが最速で使える";
-            }
-        }
-        public class FullKatsura : CheckPoint
-        {
-            public FullKatsura(int count) : base(count) { }
-            public bool SecondTimeKatsura { get; set; }
-            public bool ThirdTimeTwoKatsura { get; set; }
-            public override bool IsFullfill()
-            {
-                return this.SecondTimeKatsura && this.ThirdTimeTwoKatsura;
-            }
-            public override void Reset()
-            {
-                this.SecondTimeKatsura = this.ThirdTimeTwoKatsura = false;
-            }
-            public override string ToName()
-            {
-                return "カツラが二枚連続で使える確率";
-            }
-        }
-        public class GyaropOrKyucon : CheckPoint
-        {
-            public GyaropOrKyucon(int count) : base(count) { }
-            public override string ToName()
-            {
-                return "ギャロップかキュウコンが最速で完成する";
-            }
-        }
-        public class KatsuraAndGyaropOrKyucon : CheckPoint
-        {
-            public KatsuraAndGyaropOrKyucon(int count) : base(count) { }
-            public override string ToName()
-            {
-                return "ギャロップかキュウコンが完成してカツラも手札にある";
-            }
-        }
-        public class FullKatsuraAndGyaropOrKyucon : CheckPoint
-        {
-            public FullKatsuraAndGyaropOrKyucon(int count) : base(count) { }
-            public override string ToName()
-            {
-                return "ギャロップかキュウコンが完成してカツラが二枚連続で使える";
+                return "ジャローダが最速で完成する";
             }
         }
         #endregion
@@ -348,13 +275,7 @@
             int count = 100000;
 
             #region <チェック項目のリスト>
-            FastestGyarop fastestGyarop = new FastestGyarop(count);
-            FastestKyucon fastestKyucon = new FastestKyucon(count);
-            FastestKatsura fastestKatsura = new FastestKatsura(count);
-            FullKatsura fullKatsura = new FullKatsura(count);
-            GyaropOrKyucon gyaropOrKyucon = new GyaropOrKyucon(count);
-            KatsuraAndGyaropOrKyucon katsuraAndGyaropOrKyucon = new KatsuraAndGyaropOrKyucon(count);
-            FullKatsuraAndGyaropOrKyucon fullKatsuraAndGyaropOrKyucon = new FullKatsuraAndGyaropOrKyucon(count);
+            FastestJaroda fastestJaroda = new FastestJaroda(count);
             #endregion
 
             for (int i = 0; i < count; i++)
@@ -365,64 +286,38 @@
                 #endregion
 
                 #region <チェック項目のリセット>
-                fastestGyarop.Reset();
-                fastestKyucon.Reset();
-                fastestKatsura.Reset();
-                fullKatsura.Reset();
+                fastestJaroda.Reset();
                 #endregion
 
                 // 1ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestKyucon.FirstTimeRocon = hands.HaveOne(CardType.Rocon);
-                fastestGyarop.FirstTimePonita = hands.HaveOne(CardType.Ponita);
+                fastestJaroda.FirstTimeTsutaja = hands.HaveOne(CardType.Tsutaja);
                 #endregion
 
                 // 2ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestKyucon.SecondTimeKyucon = hands.HaveOne(CardType.Kyukon);
-                fastestGyarop.SecondTimeGyarop = hands.HaveOne(CardType.Gyarop);
-                fastestKatsura.SecondTimeKatsura = hands.HaveOne(CardType.Katsura);
-                fullKatsura.SecondTimeKatsura = hands.HaveOne(CardType.Katsura);
+                fastestJaroda.SecondTimeJaropi = hands.HaveOne(CardType.Jaropi);
                 #endregion
 
                 // 3ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fullKatsura.ThirdTimeTwoKatsura = hands.HaveTwo(CardType.Katsura);
+                fastestJaroda.ThirdTimeJaroda = hands.HaveOne(CardType.Jaroda);
                 #endregion
 
                 // 4ターン目
                 hands = DrawOne(hands);
 
                 #region <チェック項目の更新>
-                fastestGyarop.Update();
-                fastestKyucon.Update();
-                fastestKatsura.Update();
-                fullKatsura.Update();
-                gyaropOrKyucon.Update(fastestGyarop.IsFullfill() || fastestKyucon.IsFullfill());
-                katsuraAndGyaropOrKyucon.Update(fastestKatsura.IsFullFilled && gyaropOrKyucon.IsFullFilled);
-                fullKatsuraAndGyaropOrKyucon.Update(fullKatsura.IsFullFilled && gyaropOrKyucon.IsFullFilled);
+                fastestJaroda.Update();
                 #endregion
             }
 
             #region <結果の出力>
-            //
-            Console.WriteLine(fastestKyucon.ToName());
-            Console.WriteLine(fastestKyucon.GetResult());
-            //
-            Console.WriteLine(fastestGyarop.ToName());
-            Console.WriteLine(fastestGyarop.GetResult());
-            //
-            Console.WriteLine(gyaropOrKyucon.ToName());
-            Console.WriteLine(gyaropOrKyucon.GetResult());
-            //
-            Console.WriteLine(katsuraAndGyaropOrKyucon.ToName());
-            Console.WriteLine(katsuraAndGyaropOrKyucon.GetResult());
-            //
-            Console.WriteLine(fullKatsuraAndGyaropOrKyucon.ToName());
-            Console.WriteLine(fullKatsuraAndGyaropOrKyucon.GetResult());
+            Console.WriteLine(fastestJaroda.ToName());
+            Console.WriteLine(fastestJaroda.GetResult());
             #endregion
 
             Console.ReadKey();
