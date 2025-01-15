@@ -17,6 +17,7 @@
 
         public static List<Card> Deck;
 
+
         public static List<Card> CreateDeck()
         {
             List<Card> Deck = new List<Card>
@@ -359,8 +360,7 @@
             Console.WriteLine("ウィンディ4ターン");
             Console.WriteLine((fourWindy / count) * 100);
 
-
-            while (true) { }
+            Console.ReadKey();
         }
     }
 }
