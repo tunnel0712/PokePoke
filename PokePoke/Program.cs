@@ -2,58 +2,16 @@
 {
     internal static class Program
     {
-        public enum CardType
-        {
-            Fire,
-            Hitokage,
-            Rizard,
-            Rizardon,
-            Gardy,
-            Windy,
-            Okido,
-            PokeBall,
-            Other,
-        }
-
+        #region <共通メソッド>
         public static List<Card> Deck;
 
-
-        public static List<Card> CreateDeck()
-        {
-            List<Card> Deck = new List<Card>
-            {
-                new Card { Type = CardType.Fire },
-                new Card { Type = CardType.Fire },
-                //
-                new Card { Type = CardType.Hitokage },
-                new Card { Type = CardType.Hitokage },
-                new Card { Type = CardType.Rizard },
-                new Card { Type = CardType.Rizard },
-                new Card { Type = CardType.Rizardon },
-                new Card { Type = CardType.Rizardon },
-                ////
-                new Card { Type = CardType.Gardy },
-                new Card { Type = CardType.Windy },
-                new Card { Type = CardType.Gardy },
-                new Card { Type = CardType.Windy },
-
-                //
-                new Card { Type = CardType.Okido },
-                new Card { Type = CardType.Okido },
-                new Card { Type = CardType.PokeBall },
-                new Card { Type = CardType.PokeBall },
-            };
-            while (Deck.Count() < 20)
-            {
-                Deck.Add(new Card { Type = CardType.Other });
-            }
-
-            return Deck;
-        }
-
+        /// <summary>
+        /// カードの定義
+        /// </summary>
         public class Card
         {
             public CardType Type;
+            public bool IsTane = false;
 
             public override string ToString()
             {
@@ -61,6 +19,10 @@
             }
         }
 
+        /// <summary>
+        /// 初期ドロー
+        /// </summary>
+        /// <returns></returns>
         public static List<Card> FirstDraw()
         {
             // 枚数調整
@@ -77,7 +39,7 @@
             }
 
             // マリガン
-            if (hand.ContainTane())
+            if (hand.Any(h => h.IsTane))
             {
                 return hand;
             }
@@ -87,6 +49,11 @@
             }
         }
 
+        /// <summary>
+        /// 一枚引く
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
         public static List<Card> DrawOne(List<Card> hand)
         {
             // ドロー
@@ -107,6 +74,11 @@
             return hand;
         }
 
+        /// <summary>
+        /// オーキド博士の使用
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
         public static List<Card> Okid(List<Card> hand)
         {
             Random random = new Random();
@@ -137,6 +109,11 @@
             return result;
         }
 
+        /// <summary>
+        /// モンスターボールの使用
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
         public static List<Card> MonsterBall(List<Card> hand)
         {
             Random random = new Random();
@@ -146,12 +123,12 @@
             // ドロー
             foreach (Card card in hand)
             {
-                if (card.Type == CardType.PokeBall && Deck.Any(card => card.IsTane()))
+                if (card.Type == CardType.PokeBall && Deck.Any(card => card.IsTane))
                 {
                     while (true)
                     {
                         int index = random.Next(Deck.Count); // 山札からランダムなインデックスを取得
-                        if (Deck[index].IsTane())
+                        if (Deck[index].IsTane)
                         {
                             result.Add(Deck[index]); // カードを手札に追加
                             Deck.RemoveAt(index); // 山札からそのカードを削除
@@ -172,193 +149,148 @@
             return result;
         }
 
-        public static bool ContainTane(this List<Card> hand)
+        /// <summary>
+        /// 判定条件
+        /// </summary>
+        public class CheckPoint
         {
-            return hand.Any(card =>
-            {
-                return card.IsTane();
-            });
+            public CheckPoint(int count) { this.Count = count; }
+            public int Count { get; set; }
+            public double Fullfill = 0;
+            public virtual bool IsFullfill() { throw new NotImplementedException(); }
+            public void Update() { if (this.IsFullfill()) { this.Fullfill++; } }
+            public virtual void Reset() { throw new NotImplementedException(); }
+            public double GetResult() { return this.Fullfill / this.Count * 100; } 
+            public virtual string ToName() { throw new NotImplementedException(); }
         }
+        #endregion
 
-        public static bool IsTane(this Card card)
+        #region <デッキごとに変える>
+        /// <summary>
+        /// カード種別
+        /// </summary>
+        public enum CardType
         {
-            return card.Type == CardType.Fire ||
-                   card.Type == CardType.Gardy ||
-                   card.Type == CardType.Hitokage;
+            Fire,
+            Hitokage,
+            Rizard,
+            Rizardon,
+            Gardy,
+            Windy,
+            Okido,
+            PokeBall,
+            Other,
         }
-            
-
-        public class Saisoku
+        /// <summary>
+        /// デッキの作成
+        /// </summary>
+        /// <returns></returns>
+        public static List<Card> CreateDeck()
         {
-            public bool firstTimeFire = false;
-            public bool firstTimeHitokage = false;
-            public bool secondTimeRizard = false;
-            public bool thirdTimeRizardon = false;
-
-            public void Reset()
+            List<Card> Deck = new List<Card>
             {
-                firstTimeFire = false;
-                firstTimeHitokage = false;
-                secondTimeRizard = false;
-                thirdTimeRizardon = false;
+                new Card { Type = CardType.Fire, IsTane = true  },
+                new Card { Type = CardType.Fire, IsTane = true },
+                //
+                new Card { Type = CardType.Hitokage, IsTane = true },
+                new Card { Type = CardType.Hitokage, IsTane = true },
+                new Card { Type = CardType.Rizard },
+                new Card { Type = CardType.Rizard },
+                new Card { Type = CardType.Rizardon },
+                new Card { Type = CardType.Rizardon },
+                ////
+                new Card { Type = CardType.Gardy, IsTane = true },
+                new Card { Type = CardType.Gardy, IsTane = true },
+                new Card { Type = CardType.Windy },
+                new Card { Type = CardType.Windy },
+
+                //
+                new Card { Type = CardType.Okido },
+                new Card { Type = CardType.Okido },
+                new Card { Type = CardType.PokeBall },
+                new Card { Type = CardType.PokeBall },
+            };
+            while (Deck.Count() < 20)
+            {
+                Deck.Add(new Card { Type = CardType.Other });
             }
 
-            public bool FulfillSaisoku()
-            {
-                return firstTimeHitokage && secondTimeRizard && thirdTimeRizardon;
-            }
-
-            public bool FulfillFireSaisoku()
-            {
-                return firstTimeFire && firstTimeHitokage && secondTimeRizard && thirdTimeRizardon;
-            }
+            return Deck;
         }
+        #endregion
 
-        public class Windy
+        #region <条件ごとに変える>
+        public class FastestRezardon : CheckPoint
         {
-            public int GardyTime = -1;
-            public int WindyTime = -1;
-
-            public void Clear()
+            public FastestRezardon(int count) : base(count) { }
+            public bool FirstTimeHitokage { get; set; }
+            public bool SecondTimeRizard { get; set; }
+            public bool ThirdTimeRizardon { get; set; }
+            public override bool IsFullfill()
             {
-                GardyTime = -1;
-                WindyTime = -1;
+                return this.FirstTimeHitokage && this.SecondTimeRizard && this.ThirdTimeRizardon;
             }
-
-            public void SetGardyTime(int time)
+            public override void Reset()
             {
-                if(GardyTime == -1) { this.GardyTime = time; }
+                this.FirstTimeHitokage = this.SecondTimeRizard = this.ThirdTimeRizardon = false;
             }
-            public void SetWindyTime(int time)
+            public override string ToName()
             {
-                if (WindyTime == -1) { this.WindyTime = time; }
-            }
-
-            public bool IsOneTurn()
-            {
-                return (GardyTime != -1 && WindyTime != -1) && GardyTime == 0 && WindyTime <= 1;
-            }
-            public bool IsTwoTurn()
-            {
-                return (GardyTime != -1 && WindyTime != -1) && GardyTime <= 1 && WindyTime <= 2;
-            }
-            public bool IsThreeTurn()
-            {
-                return (GardyTime != -1 && WindyTime != -1) && GardyTime <= 2 && WindyTime <= 3;
-            }
-            public bool IsFourTurn()
-            {
-                return (GardyTime != -1 && WindyTime != -1) && GardyTime <= 3 && WindyTime <= 4;
+                return "リザードンが最速で完成する確率";
             }
         }
+        #endregion
 
         static void Main(string[] args)
         {
-            //
-            double Fire = 0;
-            double NoFire = 0;
-
-            //
-            double FireFire = 0;
-            double NoFireFire = 0;
-
-            //
-            Saisoku saisoku = new Saisoku();
-            double Saisoku = 0;
-            
-            //
-            double FireSaisoku = 0;
-            
-            //
-            Windy windy = new Windy();
-            double oneWindy = 0;
-            double twoWindy = 0;
-            double threeWindy = 0;
-            double fourWindy = 0;
-            
+            // 試行回数
             int count = 100000;
+
+            #region <チェック項目のリスト>
+            FastestRezardon fastestRezardon = new FastestRezardon(count);
+            #endregion
+
             for (int i = 0; i < count; i++)
             {
+                #region <初期リセット>
                 Deck = CreateDeck(); // 山札をリセット
                 List<Card> hands = FirstDraw();
+                #endregion
 
-                // フラグリセット
-                saisoku.Reset();
-                windy.Clear();
+                #region <チェック項目のリセット>
+                fastestRezardon.Reset();
+                #endregion
 
                 // 1ターン目
                 hands = DrawOne(hands);
-                if (hands.Count(hand => hand.Type == CardType.Fire) >= 1)
-                {
-                    Fire++;
-                }
-                else
-                {
-                    NoFire++;
-                }
-                if (hands.Count(hand => hand.Type == CardType.Fire) == 2)
-                {
-                    FireFire++;
-                }
-                else
-                {
-                    NoFireFire++;
-                }
-                saisoku.firstTimeHitokage = hands.Any(h => h.Type == CardType.Hitokage);
-                saisoku.firstTimeFire = hands.Any(h => h.Type == CardType.Fire);
-                if (hands.Any(h => h.Type == CardType.Gardy)) { windy.SetGardyTime(0); }
-                if (hands.Any(h => h.Type == CardType.Windy)) { windy.SetWindyTime(0); }
+                #region <チェック項目の更新>
+                fastestRezardon.FirstTimeHitokage = hands.Any(h => h.Type == CardType.Hitokage);
+                #endregion
 
                 // 2ターン目
                 hands = DrawOne(hands);
-                saisoku.secondTimeRizard = hands.Any(h => h.Type == CardType.Rizard);
-                if (hands.Any(h => h.Type == CardType.Gardy)) { windy.SetGardyTime(1); }
-                if (hands.Any(h => h.Type == CardType.Windy)) { windy.SetWindyTime(1); }
+                #region <チェック項目の更新>
+                fastestRezardon.SecondTimeRizard = hands.Any(h => h.Type == CardType.Rizard);
+                #endregion
 
                 // 3ターン目
                 hands = DrawOne(hands);
-                saisoku.thirdTimeRizardon = hands.Any(h => h.Type == CardType.Rizardon);
-                if (hands.Any(h => h.Type == CardType.Gardy)) { windy.SetGardyTime(2); }
-                if (hands.Any(h => h.Type == CardType.Windy)) { windy.SetWindyTime(2); }
+                #region <チェック項目の更新>
+                fastestRezardon.ThirdTimeRizardon = hands.Any(h => h.Type == CardType.Rizardon);
+                #endregion
 
                 // 4ターン目
                 hands = DrawOne(hands);
-                if (hands.Any(h => h.Type == CardType.Gardy)) { windy.SetGardyTime(3); }
-                if (hands.Any(h => h.Type == CardType.Windy)) { windy.SetWindyTime(3); }
 
-                // カウント
-                if (saisoku.FulfillSaisoku()) { Saisoku++; }
-                if (saisoku.FulfillFireSaisoku()) { FireSaisoku++; }
-                if (windy.IsOneTurn()) { oneWindy++; }
-                if (windy.IsTwoTurn()) { twoWindy++; }
-                if (windy.IsThreeTurn()) { threeWindy++; }
-                if (windy.IsFourTurn()) { fourWindy++; }
+                #region <チェック項目の更新>
+                fastestRezardon.Update();
+                #endregion
             }
 
-            Console.WriteLine("初手にファイヤーが来る確率");
-            Console.WriteLine((Fire / count) * 100);
-
-            // 
-            Console.WriteLine("初手にファイヤーが二枚来る確率");
-            Console.WriteLine((FireFire/count)*100);
-
-            //
-            Console.WriteLine("リザードンが最速で来る確率");
-            Console.WriteLine((Saisoku / count) * 100);
-
-            // 初手ファイヤーが来てリザードンが最速で立つ確率
-            Console.WriteLine("初手ファイヤーが来てリザードンが最速で立つ確率");
-            Console.WriteLine((FireSaisoku / count) * 100);
-
-            //
-            Console.WriteLine("ウィンディ1ターン");
-            Console.WriteLine((oneWindy / count) * 100);
-            Console.WriteLine("ウィンディ2ターン");
-            Console.WriteLine((twoWindy / count) * 100);
-            Console.WriteLine("ウィンディ3ターン");
-            Console.WriteLine((threeWindy / count) * 100);
-            Console.WriteLine("ウィンディ4ターン");
-            Console.WriteLine((fourWindy / count) * 100);
+            #region <結果の出力>
+            Console.WriteLine(fastestRezardon.ToName());
+            Console.WriteLine(fastestRezardon.GetResult());
+            #endregion
 
             Console.ReadKey();
         }
