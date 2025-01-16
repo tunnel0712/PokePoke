@@ -226,7 +226,7 @@
                 new Card { Type = CardType.Nassy },
                 new Card { Type = CardType.Nassy },
                 // ジャローダ
-                // new Card { Type = CardType.Tsutaja, IsTane = true },
+                new Card { Type = CardType.Tsutaja, IsTane = true },
                 new Card { Type = CardType.Tsutaja, IsTane = true },
                 new Card { Type = CardType.Jaropi, },
                 new Card { Type = CardType.Jaropi, },
@@ -267,6 +267,57 @@
                 return "ジャローダが最速で完成する";
             }
         }
+        public class FirstCelebi : CheckPoint
+        {
+            public FirstCelebi(int count) : base(count) { }
+            public bool FirstTimeCelebi { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.FirstTimeCelebi;
+            }
+            public override void Reset()
+            {
+                this.FirstTimeCelebi = false;
+            }
+            public override string ToName()
+            {
+                return "初手でセレビィが来る";
+            }
+        }
+        public class FirstCelebiAndFastestJaroda : CheckPoint
+        {
+            public FirstCelebiAndFastestJaroda(int count) : base(count) { }
+            public override string ToName()
+            {
+                return "1.初手でセレビィが来て最速でジャローダが完成する";
+            }
+        }
+        public class FastestNassy : CheckPoint
+        {
+            public FastestNassy(int count) : base(count) { }
+            public bool FirstTimeTamatama { get; set; }
+            public bool SecondTimeNassy { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.FirstTimeTamatama && this.SecondTimeNassy;
+            }
+            public override void Reset()
+            {
+                this.FirstTimeTamatama = this.SecondTimeNassy = false;
+            }
+            public override string ToName()
+            {
+                return "2.ナッシーが最速で完成する";
+            }
+        }
+        public class BrickHand : CheckPoint
+        {
+            public BrickHand(int count) : base(count) { }
+            public override string ToName()
+            {
+                return "1.2.のどちらでもない手札事故";
+            }
+        }
         #endregion
 
         static void Main(string[] args)
@@ -276,6 +327,10 @@
 
             #region <チェック項目のリスト>
             FastestJaroda fastestJaroda = new FastestJaroda(count);
+            FirstCelebi firstCelebi = new FirstCelebi(count);
+            FirstCelebiAndFastestJaroda firstCelebiAndFastestJaroda = new FirstCelebiAndFastestJaroda(count);
+            FastestNassy fastestNassy = new FastestNassy(count);
+            BrickHand brickHand = new BrickHand(count);
             #endregion
 
             for (int i = 0; i < count; i++)
@@ -287,18 +342,23 @@
 
                 #region <チェック項目のリセット>
                 fastestJaroda.Reset();
+                firstCelebi.Reset();
+                fastestNassy.Reset();
                 #endregion
 
                 // 1ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
                 fastestJaroda.FirstTimeTsutaja = hands.HaveOne(CardType.Tsutaja);
+                firstCelebi.FirstTimeCelebi = hands.HaveOne(CardType.Celebi);
+                fastestNassy.FirstTimeTamatama = hands.HaveOne(CardType.Tamatama);
                 #endregion
 
                 // 2ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
                 fastestJaroda.SecondTimeJaropi = hands.HaveOne(CardType.Jaropi);
+                fastestNassy.SecondTimeNassy = hands.HaveOne(CardType.Nassy);
                 #endregion
 
                 // 3ターン目
@@ -312,12 +372,19 @@
 
                 #region <チェック項目の更新>
                 fastestJaroda.Update();
+                firstCelebi.Update();
+                fastestNassy.Update();
+                firstCelebiAndFastestJaroda.Update(firstCelebi.IsFullFilled && fastestJaroda.IsFullFilled);
+                brickHand.Update(!firstCelebiAndFastestJaroda.IsFullFilled && !fastestNassy.IsFullFilled);
                 #endregion
             }
 
             #region <結果の出力>
-            Console.WriteLine(fastestJaroda.ToName());
-            Console.WriteLine(fastestJaroda.GetResult());
+            Console.WriteLine(fastestJaroda.ToName() +"確率 " + fastestJaroda.GetResult() +" %");
+            Console.WriteLine(firstCelebi.ToName() + "確率 " + firstCelebi.GetResult() + " %");
+            Console.WriteLine(firstCelebiAndFastestJaroda.ToName() + "確率 " + firstCelebiAndFastestJaroda.GetResult() + " %");
+            Console.WriteLine(fastestNassy.ToName() + "確率 " + fastestNassy.GetResult() + " %");
+            Console.WriteLine(brickHand.ToName() + "確率 " + brickHand.GetResult() + " %");
             #endregion
 
             Console.ReadKey();
