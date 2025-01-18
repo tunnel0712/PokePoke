@@ -4,6 +4,7 @@
     {
         #region <共通メソッド>
         public static List<Card> Deck;
+        public static Random random = new Random();
 
         /// <summary>
         /// カードの定義
@@ -31,7 +32,6 @@
             Deck = CreateDeck();
 
             // 初期ドロー
-            Random random = new Random();
             List<Card> hand = new List<Card>();
             for (int i = 0; i < 5; i++)
             {
@@ -58,9 +58,6 @@
         /// <returns></returns>
         public static List<Card> DrawOne(List<Card> hand)
         {
-            // ドロー
-            Random random = new Random();
-
             // 一枚引く
             while (true)
             {
@@ -102,8 +99,6 @@
         /// <returns></returns>
         public static List<Card> Okid(List<Card> hand)
         {
-            Random random = new Random();
-
             List<Card> result = new List<Card>();
 
             bool Okided = false;
@@ -150,8 +145,6 @@
         /// <returns></returns>
         public static List<Card> MonsterBall(List<Card> hand)
         {
-            Random random = new Random();
-
             List<Card> result = new List<Card>();
 
             // ドロー
@@ -196,8 +189,6 @@
         /// <returns></returns>
         public static List<Card> MysticalTablet(List<Card> hand)
         {
-            Random random = new Random();
-
             List<Card> result = new List<Card>();
 
             // ドロー
