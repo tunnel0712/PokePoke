@@ -11,7 +11,9 @@
         public class Card
         {
             public CardType Type;
+            public bool IsBottom = false;
             public bool IsTane = false;
+            public bool IsPsychic = false;
 
             public override string ToString()
             {
@@ -58,19 +60,38 @@
         {
             // ドロー
             Random random = new Random();
-            int index = random.Next(Deck.Count); // 山札からランダムなインデックスを取得
-            hand.Add(Deck[index]); // カードを手札に追加
-            Deck.RemoveAt(index); // 山札からそのカードを削除
+
+            // 一枚引く
+            while (true)
+            {
+                int index = random.Next(Deck.Count); // 山札からランダムなインデックスを取得
+                if (!Deck[index].IsBottom)
+                {
+                    hand.Add(Deck[index]); // カードを手札に追加
+                    Deck.RemoveAt(index); // 山札からそのカードを削除
+                    break;
+                }
+                else
+                {
+                    continue;
+                }
+            }
 
             // モンスターボール使用
             hand = MonsterBall(hand);
-
+            
+            // 幻の石板使用
+            hand = MysticalTablet(hand);
+            
             // オーキド使用
             hand = Okid(hand);
-
+            
             // モンスターボール使用
             hand = MonsterBall(hand);
-
+            
+            // 幻の石板使用
+            hand = MysticalTablet(hand);
+            
             return hand;
         }
 
@@ -92,13 +113,26 @@
             {
                 if (card.Type == CardType.Okido && Okided == false)
                 {
-                    int index = random.Next(Deck.Count); // 山札からランダムなインデックスを取得
-                    result.Add(Deck[index]); // カードを手札に追加
-                    Deck.RemoveAt(index); // 山札からそのカードを削除
-                    index = random.Next(Deck.Count);
-                    result.Add(Deck[index]); // カードを手札に追加
-                    Deck.RemoveAt(index); // 山札からそのカードを削除
-                    Okided = true;
+                    while (true)
+                    {
+                        int index = random.Next(Deck.Count); // 山札からランダムなインデックスを取得
+                        // 底でなかったら
+                        if (!Deck[index].IsBottom)
+                        {
+                            result.Add(Deck[index]); // カードを手札に追加
+                            Deck.RemoveAt(index); // 山札からそのカードを削除
+                            index = random.Next(Deck.Count);
+                            result.Add(Deck[index]); // カードを手札に追加
+                            Deck.RemoveAt(index); // 山札からそのカードを削除
+                            Okided = true;
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    
                 }
                 else
                 {
@@ -145,6 +179,48 @@
                     result.Add(card);
                 }
             }
+            
+            // 底フラグの解除
+            foreach(Card card in Deck)
+            {
+                card.IsBottom = false;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 幻の石板
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns></returns>
+        public static List<Card> MysticalTablet(List<Card> hand)
+        {
+            Random random = new Random();
+
+            List<Card> result = new List<Card>();
+
+            // ドロー
+            foreach (Card card in hand)
+            {
+                if (card.Type == CardType.MysticalTablet)
+                {
+                    int index = random.Next(Deck.Count); // 山札からランダムなインデックスを取得
+                    if (Deck[index].IsPsychic)
+                    {
+                        result.Add(Deck[index]); // カードを手札に追加
+                        Deck.RemoveAt(index); // 山札からそのカードを削除
+                    }
+                    else
+                    {
+                        Deck[index].IsBottom = true; // 底フラグを設定
+                    }
+                }
+                else
+                {
+                    result.Add(card);
+                }
+            }
 
             return result;
         }
@@ -178,12 +254,69 @@
             public virtual void Reset() { throw new NotImplementedException(); }
             public double GetResult() { return Math.Round((this.Fullfill / this.Count) * 100, 2); } 
             public virtual string ToName() { throw new NotImplementedException(); }
+            public string ToResultString() { return this.ToName() + "確率 " + this.GetResult() + " %"; }
         }
 
+        /// <summary>
+        /// 種ポケモン初手の例
+        /// </summary>
+        public class FastestOne : CheckPoint
+        {
+            public FastestOne(int count) : base(count) { }
+            public bool FirstTime { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.FirstTime;
+            }
+            public override void Reset()
+            {
+                this.FirstTime = false;
+            }
+            public override string ToName()
+            {
+                return "種ポケモンが初手で来る";
+            }
+        }
+
+        /// <summary>
+        /// 最速2進化の例
+        /// </summary>
+        public class FastestStage2 : CheckPoint
+        {
+            public FastestStage2(int count) : base(count) { }
+            public bool FirstTimeTane { get; set; }
+            public bool SecondTimeStage1 { get; set; }
+            public bool ThirdTimeStage2 { get; set; }
+            public override bool IsFullfill()
+            {
+                return this.FirstTimeTane && this.SecondTimeStage1 && this.ThirdTimeStage2;
+            }
+            public override void Reset()
+            {
+                this.FirstTimeTane = this.SecondTimeStage1 = this.ThirdTimeStage2 = false;
+            }
+            public override string ToName()
+            {
+                return "2進化ポケモンが最速で完成する";
+            }
+        }
+
+        /// <summary>
+        /// 一枚引く
+        /// </summary>
+        /// <param name="hands"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static bool HaveOne(this List<Card> hands, CardType type)
         {
             return hands.Any(h => h.Type == type);
         }
+        /// <summary>
+        /// 二枚引く
+        /// </summary>
+        /// <param name="hands"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static bool HaveTwo(this List<Card> hands, CardType type)
         {
             return hands.Count(h => h.Type == type) == 2;
@@ -196,17 +329,27 @@
         /// </summary>
         public enum CardType
         {
+            // セレビィ
             Celebi,
-            //
+            // ジャローダ
             Tsutaja,
             Jaropi,
             Jaroda,
-            //
+            // ナッシー
             Tamatama,
             Nassy,
+            // ミュウ
+            Mew,
+            // ミュウツー
+            Mewtwo,
+            // サーナイト
+            Rartos,
+            Kirlia,
+            Sernight,
             //
             Okido,
             PokeBall,
+            MysticalTablet,
             Other,
         }
         /// <summary>
@@ -217,21 +360,21 @@
         {
             List<Card> Deck = new List<Card>
             {
-                // セレビィ
-                new Card { Type = CardType.Celebi, IsTane = true },
-                new Card { Type = CardType.Celebi, IsTane = true },
-                // ナッシー
-                new Card { Type = CardType.Tamatama, IsTane = true },
-                new Card { Type = CardType.Tamatama, IsTane = true },
-                new Card { Type = CardType.Nassy },
-                new Card { Type = CardType.Nassy },
-                // ジャローダ
-                // new Card { Type = CardType.Tsutaja, IsTane = true },
-                new Card { Type = CardType.Tsutaja, IsTane = true },
-                new Card { Type = CardType.Jaropi, },
-                new Card { Type = CardType.Jaropi, },
-                new Card { Type = CardType.Jaroda, },
-                new Card { Type = CardType.Jaroda, },
+                // ミュウ
+                new Card { Type = CardType.Mew, IsPsychic = true, IsTane = true },
+                // ミュウツー
+                new Card { Type = CardType.Mewtwo, IsPsychic = true, IsTane = true },
+                new Card { Type = CardType.Mewtwo, IsPsychic = true, IsTane = true },
+                // サーナイト
+                new Card { Type = CardType.Rartos, IsPsychic = true, IsTane = true },
+                new Card { Type = CardType.Rartos, IsPsychic = true, IsTane = true },
+                new Card { Type = CardType.Kirlia, IsPsychic = true },
+                new Card { Type = CardType.Kirlia, IsPsychic = true },
+                new Card { Type = CardType.Sernight, IsPsychic = true },
+                new Card { Type = CardType.Sernight, IsPsychic = true },
+                // 石板
+                new Card { Type = CardType.MysticalTablet },
+                new Card { Type = CardType.MysticalTablet },
                 //
                 new Card { Type = CardType.Okido },
                 new Card { Type = CardType.Okido },
@@ -248,23 +391,28 @@
         #endregion
 
         #region <条件ごとに変える>
-        public class FastestJaroda : CheckPoint
+        public class FastestSernight : FastestStage2 
         {
-            public FastestJaroda(int count) : base(count) { }
-            public bool FirstTimeTsutaja { get; set; }
-            public bool SecondTimeJaropi { get; set; }
-            public bool ThirdTimeJaroda { get; set; }
-            public override bool IsFullfill()
-            {
-                return this.FirstTimeTsutaja && this.SecondTimeJaropi && this.ThirdTimeJaroda;
-            }
-            public override void Reset()
-            {
-                this.FirstTimeTsutaja = this.SecondTimeJaropi = this.ThirdTimeJaroda = false;
-            }
+            public FastestSernight(int count) : base(count) { }
             public override string ToName()
             {
-                return "ジャローダが最速で完成する";
+                return "サーナイトが最速で完成する";
+            }
+        }
+        public class FastestMewtow : FastestOne
+        {
+            public FastestMewtow(int count) : base(count) { }
+            public override string ToName() 
+            {
+                return "ミュウツーが初手で来る";
+            }
+        }
+        public class FastestSernightAndMewtow : CheckPoint
+        {
+            public FastestSernightAndMewtow(int count) : base(count) { }
+            public override string ToName()
+            {
+                return "ミュウツーが初手で来てサーナイトも最速で完成する";
             }
         }
         #endregion
@@ -275,7 +423,9 @@
             int count = 100000;
 
             #region <チェック項目のリスト>
-            FastestJaroda fastestJaroda = new FastestJaroda(count);
+            FastestSernight fastestSernight = new FastestSernight(count);
+            FastestMewtow fastestMewtow = new FastestMewtow(count);
+            FastestSernightAndMewtow fastestSernightAndMewtow = new FastestSernightAndMewtow(count);
             #endregion
 
             for (int i = 0; i < count; i++)
@@ -286,41 +436,42 @@
                 #endregion
 
                 #region <チェック項目のリセット>
-                fastestJaroda.Reset();
+                fastestSernight.Reset();
+                fastestMewtow.Reset();
                 #endregion
 
                 // 1ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestJaroda.FirstTimeTsutaja = hands.HaveOne(CardType.Tsutaja);
+                fastestSernight.FirstTimeTane = hands.HaveOne(CardType.Rartos);
+                fastestMewtow.FirstTime = hands.HaveOne(CardType.Mewtwo);
                 #endregion
 
                 // 2ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestJaroda.SecondTimeJaropi = hands.HaveOne(CardType.Jaropi);
+                fastestSernight.SecondTimeStage1 = hands.HaveOne(CardType.Kirlia);
                 #endregion
 
                 // 3ターン目
                 hands = DrawOne(hands);
                 #region <チェック項目の更新>
-                fastestJaroda.ThirdTimeJaroda = hands.HaveOne(CardType.Jaroda);
+                fastestSernight.ThirdTimeStage2 = hands.HaveOne(CardType.Sernight);
                 #endregion
 
                 // 4ターン目
                 hands = DrawOne(hands);
 
                 #region <チェック項目の更新>
-                fastestJaroda.Update();
+                fastestSernight.Update();
+                fastestMewtow.Update();
+                fastestSernightAndMewtow.Update(fastestSernight.IsFullFilled && fastestMewtow.IsFullFilled);
                 #endregion
             }
 
             #region <結果の出力>
-            Console.WriteLine(fastestJaroda.ToName());
-            Console.WriteLine(fastestJaroda.GetResult());
+            Console.WriteLine(fastestSernightAndMewtow.ToResultString());
             #endregion
-
-            Console.ReadKey();
         }
     }
 }
